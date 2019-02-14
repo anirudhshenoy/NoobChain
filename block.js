@@ -27,7 +27,7 @@ function block() {
     previousHash = data.previousHash;
     height = data.height;
     difficulty = data.difficulty;
-    timestamp = parseInt(Date.now().toString().slice(0,-3));
+    timestamp = parseInt(Date.now().toString().slice(0, -3), 10);
     transactions = JSON.stringify(data.transactions.slice(0, data.length));
     mine();
   }
@@ -35,7 +35,7 @@ function block() {
   function createGenesis(data) {
     previousHash = data.previousHash;
     height = 1;
-    timestamp = parseInt(Date.now().toString().slice(0,-3));
+    timestamp = parseInt(Date.now().toString().slice(0, -3), 10);
     transactions = JSON.stringify(data.transactions.slice(0, data.length));
     mine();
   }

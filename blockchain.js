@@ -7,8 +7,8 @@ function blockchain() {
   let BLOCK_DIFFICULTY_ADJUSTMENT_INTERVAL = 5;
 
   const chain = [];
-  
-  function setChainParameters(generationTime,checkInterval){
+
+  function setChainParameters(generationTime, checkInterval) {
     BLOCK_GENERATION_INTERVAL_SECS = generationTime || 60;
     BLOCK_DIFFICULTY_ADJUSTMENT_INTERVAL = checkInterval || 5;
   }
@@ -41,9 +41,10 @@ function blockchain() {
   // Ensure block is atmost 30 secs in the future than Date.now()
   // or atmost within 30 secs of prevBlock
   function isValidTimestamp(newBlock, prevBlock) {
-    if(chain.length)
+    if (chain.length) {
       return ((prevBlock.view().timestamp - 30) < newBlock.view().timestamp)
-        && (newBlock.view().timestamp - 30) < Date.now().toString().slice(0,-3);
+        && (newBlock.view().timestamp - 30) < Date.now().toString().slice(0, -3);
+    }
     return true;
   }
 
@@ -52,9 +53,8 @@ function blockchain() {
     if (isValidBlockStructure(newBlock) && isValidNewBlock(newBlock, chain[chain.length - 1])
       && isValidTimestamp(newBlock, chain[chain.length - 1])) {
       chain.push(newBlock);
-    }
-    else{
-      console.log("Invalid Block");
+    } else {
+      console.log('Invalid Block');
     }
   }
 
@@ -63,8 +63,8 @@ function blockchain() {
     const timeTaken = bestBlock.view().timestamp - prevAdjustedBlock.view().timestamp;
     const expectedTime = BLOCK_DIFFICULTY_ADJUSTMENT_INTERVAL * BLOCK_GENERATION_INTERVAL_SECS;
     // Blocks Generated too fast
-    console.log('Time Taken: ',timeTaken);
-    console.log('Expected Time: ',expectedTime);
+    console.log('Time Taken: ', timeTaken);
+    console.log('Expected Time: ', expectedTime);
     if ((timeTaken) < expectedTime) {
       return prevAdjustedBlock.view().difficulty + 1;
     }
