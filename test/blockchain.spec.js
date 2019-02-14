@@ -1,12 +1,27 @@
 const expect = require('chai').expect;
 const blockchain = require('../blockchain.js');
+blockchain.setChainParameters(0.01,5);
 
 
-describe('Blockchain Tests', function(){
-  it('should create a new block and add it to chain', (done) => {
-    blockchain.generateNextBlock();
-    expect(blockchain.view().length).to.equal(1);
-    done();
+const timeout = ms => new Promise(res => setTimeout(res, ms))
+
+async function addBlocks(n,delay){
+  return new Promise(async (resolve) => {
+    for(let i =0 ; i < n ; i++){
+      blockchain.generateNextBlock();
+      await timeout(delay);
+    }
+
+    resolve();
+  });
+}
+
+
+describe('Blockchain Tests', function () {
+  it('should create a new block and add it to chain', async function(){
+    this.timeout(60000);
+    await addBlocks(6,100);
+    expect(blockchain.view().length).to.equal(6);
   });
 
 
@@ -16,7 +31,6 @@ describe('Blockchain Tests', function(){
 
 
   it('should ensure previous hash is contained in next block', (done) => {
-    blockchain.generateNextBlock();
     expect(blockchain.view()[0].view().hash).to.equal(blockchain.view()[1].view().previousHash);
     done();
   });
@@ -26,20 +40,22 @@ describe('Blockchain Tests', function(){
   });
 
 
-  it('difficulty should increase when blocks are created faster than BLOCK_INTERVAL_TIME_SECS', function(done){
-    this.timeout(60000);
-    let i=3;
-    let chainTimeout;
-    const createChain = new Promise((resolve, reject)=> {
-      setTimeout(()=> resolve(), 1000);      
-    });
-    createChain.then((result)=> {
-      let chainArray= blockchain.view();
-      expect(chainArray[chainArray.length-1].view().difficulty).to.be.above(20000);
-    }).finally(done);
-        
-
+  it('difficulty should reduce when blocks are created slower than BLOCK_INTERVAL_TIME_SECS', async ()=> {
+    let chainArray = blockchain.view();
+    expect(chainArray[chainArray.length - 1].view().difficulty).to.be.below(chainArray[chainArray.length - 2].view().difficulty);
   });
-  it('difficulty should reduce when blocks are created slower than BLOCK_INTERVAL_TIME_SECS');
-  it('difficulty should not change before BLOCK_DIFFICULTY_ADJUSTMENT_INTERVAL');
+
+  it('difficulty should increase when blocks are created faster than BLOCK_INTERVAL_TIME_SECS', async function(){
+    this.timeout(60000);
+    blockchain.setChainParameters(10,5);
+    await addBlocks(5,10);
+    let chainArray = blockchain.view();
+    expect(chainArray[chainArray.length - 1].view().difficulty).to.be.above(chainArray[chainArray.length - 2].view().difficulty);
+  });
+
+  it('difficulty should not change before BLOCK_DIFFICULTY_ADJUSTMENT_INTERVAL', ()=> {
+    let chainArray = blockchain.view();
+    expect(chainArray[2].view().difficulty).to.equal(chainArray[3].view().difficulty);
+    expect(chainArray[7].view().difficulty).to.equal(chainArray[8].view().difficulty);
+  });
 });

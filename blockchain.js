@@ -3,11 +3,16 @@ const block = require('./block.js');
 
 
 function blockchain() {
-  const BLOCK_GENERATION_INTERVAL_SECS = 60;
-  const BLOCK_DIFFICULTY_ADJUSTMENT_INTERVAL = 5;
+  let BLOCK_GENERATION_INTERVAL_SECS = 60;
+  let BLOCK_DIFFICULTY_ADJUSTMENT_INTERVAL = 5;
 
   const chain = [];
   
+  function setChainParameters(generationTime,checkInterval){
+    BLOCK_GENERATION_INTERVAL_SECS = generationTime || 60;
+    BLOCK_DIFFICULTY_ADJUSTMENT_INTERVAL = checkInterval || 5;
+  }
+
 
   function isValidBlockStructure(newBlock) {
     return (typeof (newBlock.view().hash) === 'string'
@@ -107,6 +112,7 @@ function blockchain() {
   return Object.freeze({
     view,
     generateNextBlock,
+    setChainParameters,
   });
 }
 
