@@ -108,9 +108,14 @@ function blockchain() {
     return chain;
   }
 
+  function viewBestBlock() {
+    return chain[chain.length-1].view();
+  }
+
 
   return Object.freeze({
     view,
+    viewBestBlock,
     generateNextBlock,
     setChainParameters,
   });
