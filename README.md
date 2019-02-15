@@ -1,4 +1,4 @@
-#NoobChain 
+# NoobChain 
 
 NoobChain is a simple NodeJS blockchain intended to be a learning tool. NoobChain is based on the excellent tutorial -[NaiveCoin] (https://github.com/lhartikk/naivecoin) by lhartikk
 
