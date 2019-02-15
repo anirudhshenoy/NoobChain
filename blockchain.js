@@ -15,11 +15,11 @@ function blockchain() {
 
 
   function isValidBlockStructure(newBlock) {
-    return (typeof (newBlock.view().hash) === 'string'
-      && typeof (newBlock.view().previousHash) === 'string'
-      && typeof (newBlock.view().height) === 'number'
-      && typeof (newBlock.view().timestamp) === 'number'
-      && typeof (newBlock.view().nonce) === 'number');
+    return (typeof (newBlock.view().hash) === 'string' &&
+      typeof (newBlock.view().previousHash) === 'string' &&
+      typeof (newBlock.view().height) === 'number' &&
+      typeof (newBlock.view().timestamp) === 'number' &&
+      typeof (newBlock.view().nonce) === 'number');
   }
 
   function isValidNewBlock(newBlock, prevBlock) {
@@ -42,16 +42,16 @@ function blockchain() {
   // or atmost within 30 secs of prevBlock
   function isValidTimestamp(newBlock, prevBlock) {
     if (chain.length) {
-      return ((prevBlock.view().timestamp - 30) < newBlock.view().timestamp)
-        && (newBlock.view().timestamp - 30) < Date.now().toString().slice(0, -3);
+      return ((prevBlock.view().timestamp - 30) < newBlock.view().timestamp) &&
+        (newBlock.view().timestamp - 30) < Date.now().toString().slice(0, -3);
     }
     return true;
   }
 
 
   function addBlock(newBlock) {
-    if (isValidBlockStructure(newBlock) && isValidNewBlock(newBlock, chain[chain.length - 1])
-      && isValidTimestamp(newBlock, chain[chain.length - 1])) {
+    if (isValidBlockStructure(newBlock) && isValidNewBlock(newBlock, chain[chain.length - 1]) &&
+      isValidTimestamp(newBlock, chain[chain.length - 1])) {
       chain.push(newBlock);
     } else {
       console.log('Invalid Block');
@@ -89,7 +89,7 @@ function blockchain() {
       await nb.createGenesis({
         previousHash: '1',
         transactions: [],
-        difficulty: 5,
+        difficulty: 10,
       });
     } else {
       pb = chain[chain.length - 1];
@@ -113,11 +113,39 @@ function blockchain() {
   }
 
 
+  function getCummulativeDifficulty() {
+    return chain
+      .map((block) => block.view().difficulty)
+      .map((difficulty) => Math.pow(2, difficulty))
+      .reduce((a, b) => a + b);
+  };
+
+  function isValidChain(validateChain) {
+    for (let i = 1; i < validateChain.length; i++) {
+      if (!isValidNewBlock(validateChain[i], validateChain[i - 1])) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  function replaceChain(newChain){
+    if(isValidChain(newChain) && (getCummulativeDifficulty(newChain) > getCummulativeDifficulty(chain))){
+      chain = newChain;
+    }
+    else
+    console.log('Invalid Chain received');
+  }
+
+
   return Object.freeze({
     view,
     viewBestBlock,
     generateNextBlock,
     setChainParameters,
+    replaceChain,
+    isValidBlockStructure,
+    addBlock
   });
 }
 

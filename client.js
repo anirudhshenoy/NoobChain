@@ -1,6 +1,6 @@
 const WebSocket = require('ws');
 
-const SERVER_ADDRESS = 'ws://192.168.31.122:8080';
+const SERVER_ADDRESS = 'ws://192.168.31.122:8102';
 
 
 const ws = new WebSocket(SERVER_ADDRESS);
