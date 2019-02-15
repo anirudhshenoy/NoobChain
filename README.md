@@ -9,7 +9,8 @@ Block Data Structure:
     hash
 
 TODO: 
-    nonce
+    add LevelDB
+    WS
 
 
 
