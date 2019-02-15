@@ -9,7 +9,7 @@ const timeout = ms => new Promise(res => setTimeout(res, ms));
 async function addBlocks(n, delay) {
   return new Promise(async (resolve) => {
     for (let i = 0; i < n; i++) {
-      blockchain.generateNextBlock();
+      await blockchain.generateNextBlock();
       await timeout(delay);
     }
 

@@ -1,15 +1,17 @@
+const SHA256 = require('crypto-js/sha256');
 const blockchain = require('./blockchain.js');
 const network = require('./network.js');
 
 
+const block = require('./block.js');
+
 network.initP2PServer();
 
-const BLOCK_GENERATION_TIME_MS = 1000;
+const BLOCK_GENERATION_TIME_MS = 100;
 
 (function theLoop(i) {
-  setTimeout(() => {
-    blockchain.generateNextBlock();
+  setTimeout(async () => {
+    await blockchain.generateNextBlock();
     theLoop(++i);
   }, BLOCK_GENERATION_TIME_MS);
 }(1));
-

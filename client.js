@@ -1,22 +1,22 @@
 const WebSocket = require('ws');
 
-const SERVER_ADDRESS = 'ws://192.168.31.122:8080'
+const SERVER_ADDRESS = 'ws://192.168.31.122:8080';
 
 
 const ws = new WebSocket(SERVER_ADDRESS);
 
-ws.on('open', function open() {
-  let msg = {
-    'type' : 1,
-    'data' : ''
-  }
+ws.on('open', () => {
+  const msg = {
+    type: 1,
+    data: '',
+  };
   ws.send(JSON.stringify(msg));
 });
 
-ws.on('message', function incoming(data) {
+ws.on('message', (data) => {
   console.log(JSON.parse(data));
 });
 
-ws.on('close', function close() {
+ws.on('close', () => {
   console.log('disconnected');
 });

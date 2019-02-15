@@ -82,18 +82,18 @@ function blockchain() {
     return bestBlock.view().difficulty;
   }
 
-  function generateNextBlock() {
+  async function generateNextBlock() {
     const nb = block();
     let pb;
     if (chain.length === 0) {
-      nb.createGenesis({
+      await nb.createGenesis({
         previousHash: '1',
         transactions: [],
         difficulty: 1,
       });
     } else {
       pb = chain[chain.length - 1];
-      nb.create({
+      await nb.create({
         previousHash: pb.view().hash,
         height: pb.view().height + 1,
         difficulty: getDifficulty(),
@@ -109,7 +109,7 @@ function blockchain() {
   }
 
   function viewBestBlock() {
-    return chain[chain.length-1].view();
+    return chain[chain.length - 1].view();
   }
 
 
