@@ -7,7 +7,7 @@ const ws = new WebSocket(SERVER_ADDRESS);
 
 ws.on('open', () => {
   const msg = {
-    type: 1,
+    type: 2,
     data: '',
   };
   ws.send(JSON.stringify(msg));

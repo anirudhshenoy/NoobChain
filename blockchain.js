@@ -3,8 +3,8 @@ const block = require('./block.js');
 
 
 function blockchain() {
-  let BLOCK_GENERATION_INTERVAL_SECS = 60;
-  let BLOCK_DIFFICULTY_ADJUSTMENT_INTERVAL = 5;
+  let BLOCK_GENERATION_INTERVAL_SECS = 20;
+  let BLOCK_DIFFICULTY_ADJUSTMENT_INTERVAL = 10;
 
   const chain = [];
 
@@ -89,7 +89,7 @@ function blockchain() {
       await nb.createGenesis({
         previousHash: '1',
         transactions: [],
-        difficulty: 1,
+        difficulty: 5,
       });
     } else {
       pb = chain[chain.length - 1];

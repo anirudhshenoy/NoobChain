@@ -7,7 +7,7 @@ function block() {
   let timestamp = null;
   let transactions = [];
   let nonce = 0;
-  let difficulty = 3;
+  let difficulty = null;
 
   function calculateHash() {
     return SHA256(previousHash + height + timestamp + transactions + nonce).toString();
@@ -21,17 +21,10 @@ function block() {
         return;
       }
       nonce += 1;
-
-      //  setTimeout(() => {
-      //     recursiveMine(resolve)
-      //   },0);
       setImmediate(recursiveMine, resolve);
     }
-
-
     return new Promise(recursiveMine);
   }
-
 
   async function create(data) {
     previousHash = data.previousHash;
@@ -45,6 +38,7 @@ function block() {
   async function createGenesis(data) {
     previousHash = data.previousHash;
     height = 1;
+    difficulty=data.difficulty;
     timestamp = parseInt(Date.now().toString().slice(0, -3), 10);
     transactions = JSON.stringify(data.transactions.slice(0, data.length));
     await mine();

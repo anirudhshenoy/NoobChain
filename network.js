@@ -11,7 +11,6 @@ function network() {
 
   const sockets = [];
 
-
   function JSONToObject(data) {
     try {
       return JSON.parse(data);
@@ -19,6 +18,12 @@ function network() {
       console.log(e);
       return null;
     }
+  }
+
+  function broadcast(msg){
+    sockets.forEach((socket)=> {
+      socket.send(msg);
+    });
   }
 
   function queryBlock(ws) {
@@ -29,15 +34,15 @@ function network() {
     ws.send(JSON.stringify(response));
   }
 
-
   function queryChain(ws) {
+    let chain =   [];
+    blockchain.view().forEach((value)=> chain.push(value.view()));
     const response = {
       type: MessageType.RESPONSE_CHAIN,
-      data: JSON.stringify(blockchain.view()),
+      data: JSON.stringify(chain),
     };
     ws.send(JSON.stringify(response));
   }
-
 
   function initErrorHandler(ws) {
     const closeConnection = (myWs) => {
@@ -55,7 +60,7 @@ function network() {
         console.log('Unable to parse message');
         return;
       }
-      console.log('Received: ', JSON.stringify(msg));
+      //console.log('Received: ', JSON.stringify(msg));
       switch (msg.type) {
         case MessageType.QUERY_BLOCK:
           queryBlock(ws);
@@ -77,14 +82,12 @@ function network() {
     });
   }
 
-
   function initConnection(ws, req) {
     sockets.push(ws);
     initMessageHandler(ws);
     initErrorHandler(ws);
     console.log('client connected : ', req.connection.remoteAddress);
   }
-
 
   function initP2PServer() {
     const server = new WebSocket.Server({
@@ -93,9 +96,9 @@ function network() {
     server.on('connection', initConnection);
   }
 
-
   return Object.freeze({
     initP2PServer,
+    broadcast
   });
 }
 
