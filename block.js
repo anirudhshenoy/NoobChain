@@ -1,13 +1,15 @@
 const SHA256 = require('crypto-js/sha256');
 
-function block() {
-  let hash = null;
-  let previousHash = null;
-  let height = null;
-  let timestamp = null;
-  let transactions = [];
-  let nonce = 0;
-  let difficulty = null;
+function block(data = {}) {
+  // let hash = data.hash || null;
+  // let previousHash = null;
+  // let height = null;
+  // let timestamp = null;
+  // let transactions = [];
+  // let nonce = 0;
+  // let difficulty = null;
+
+  let {hash = null, previousHash = null,height = null,timestamp = null,transactions=[],nonce = 0,difficulty = null} = data;
 
   function calculateHash() {
     return SHA256(previousHash + height + timestamp + transactions + nonce).toString();

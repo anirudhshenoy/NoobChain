@@ -1,5 +1,5 @@
 const SHA256 = require('crypto-js/sha256');
-const blockchain = require('./blockchain.js');
+const blockchain = require('./blockchain.js')();
 const network = require('./network.js');
 const block = require('./block.js');
 

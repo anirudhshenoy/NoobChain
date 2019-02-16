@@ -1,5 +1,6 @@
 const WebSocket = require('ws');
 const blockchain = require('./blockchain.js');
+const block = require('./block.js');
 
 
 function network() {
@@ -22,18 +23,22 @@ function network() {
     }
   }
 
+  function write(ws, msg){
+    ws.send(JSON.stringify(msg));
+  }
+
   function broadcast(msg) {
     sockets.forEach((socket) => {
-      socket.send(msg);
+      write(socket,msg);
     });
   }
 
   function queryBlock(ws) {
     const response = {
       type: MessageType.RESPONSE_CHAIN,
-      data: JSON.stringify(blockchain.viewBestBlock()),
+      data: JSON.stringify(blockchain.viewBestBlock().view()),
     };
-    ws.send(JSON.stringify(response));
+    write(ws,response);
   }
 
   function queryChain(ws) {
@@ -42,7 +47,7 @@ function network() {
       type: MessageType.RESPONSE_CHAIN,
       data: JSON.stringify(chain),
     };
-    ws.send(JSON.stringify(response));
+    write(ws,response);
   }
 
   function sendQueryChain(ws) {
@@ -50,15 +55,15 @@ function network() {
       type: MessageType.QUERY_CHAIN,
       data: null,
     };
-    ws.send(JSON.stringify(response));
+    write(ws,response);
   }
 
   function broadcastBestBlock() {
     const response = {
       type: MessageType.RESPONSE_CHAIN,
-      data: JSON.stringify(blockchain.viewBestBlock()),
+      data: JSON.stringify(blockchain.viewBestBlock().view()),
     };
-    broadcast(JSON.stringify(response));
+    broadcast(response);
   }
 
   function recvdChain(recvdBlocks) {
@@ -67,8 +72,8 @@ function network() {
       console.log('received block chain size of 0');
       return;
     }
-    const recvdBestBlock = recvdBlocks[recvdBlocks.length - 1];
-    if (!blockchain.isValidBlockStructure(recvdBestBlock)) {            //This object does not have View()
+    const recvdBestBlock = block(recvdBlocks[recvdBlocks.length - 1]);
+    if (!blockchain.isValidBlockStructure(recvdBestBlock)) {        
       console.log('Invalid Block Structure');
       return;
     }
@@ -78,11 +83,14 @@ function network() {
       console.log('Blockchain is possible behind. Recvd: ' + recvdBestBlock.view().height + 'Current: ' + currentBestBlock.view().height);
       if (recvdBestBlock.view().previousHash === currentBestBlock.view().hash) {
         blockchain.addBlock(recvdBestBlock);
+        console.log("addedblock");
         broadcastBestBlock();
       } else if (recvdBestBlock.view().length === 1) {
+        console.log("sent query for chain");
         sendQueryChain();
       } else {
-        blockchain.replaceChain(recvdBlocks);
+        console.log(recvdBlocks);
+        blockchain.replaceChain(blockchain(recvdBlocks));
       }
     } else {
       console.log('Received shorter block.');
@@ -106,7 +114,7 @@ function network() {
         console.log('Unable to parse message');
         return;
       }
-      console.log('Received: ', JSON.stringify(msg));
+      //console.log('Received: ', JSON.stringify(msg));
       switch (msg.type) {
         case MessageType.QUERY_BLOCK:
           queryBlock(ws);
@@ -120,7 +128,7 @@ function network() {
             console.log('Cannot parse blocks');
             break;
           }
-          recvdChain(recvdBlocks);
+          recvdChain([recvdBlocks]);
           break;
         default:
           console.log('Invalid Message Type');

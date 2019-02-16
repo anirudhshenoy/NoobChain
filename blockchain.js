@@ -2,11 +2,11 @@ const SHA256 = require('crypto-js/sha256');
 const block = require('./block.js');
 
 
-function blockchain() {
+function blockchain(data) {
   let BLOCK_GENERATION_INTERVAL_SECS = 20;
   let BLOCK_DIFFICULTY_ADJUSTMENT_INTERVAL = 10;
 
-  const chain = [];
+  const chain= data || [];
 
   function setChainParameters(generationTime, checkInterval) {
     BLOCK_GENERATION_INTERVAL_SECS = generationTime || 60;
@@ -63,8 +63,8 @@ function blockchain() {
     const timeTaken = bestBlock.view().timestamp - prevAdjustedBlock.view().timestamp;
     const expectedTime = BLOCK_DIFFICULTY_ADJUSTMENT_INTERVAL * BLOCK_GENERATION_INTERVAL_SECS;
     // Blocks Generated too fast
-    console.log('Time Taken: ', timeTaken);
-    console.log('Expected Time: ', expectedTime);
+    //console.log('Time Taken: ', timeTaken);
+    //console.log('Expected Time: ', expectedTime);
     if ((timeTaken) < expectedTime) {
       return prevAdjustedBlock.view().difficulty + 1;
     }
@@ -109,7 +109,7 @@ function blockchain() {
   }
 
   function viewBestBlock() {
-    return chain[chain.length - 1].view();
+    return chain[chain.length - 1];
   }
 
 
@@ -150,4 +150,4 @@ function blockchain() {
 }
 
 
-module.exports = blockchain();
+module.exports = blockchain;
