@@ -14,7 +14,8 @@ ws.on('open', () => {
 });
 
 ws.on('message', (data) => {
-  console.log(JSON.parse(data));
+  let msg = JSON.parse(data);
+  console.log(JSON.parse(msg.data));
 });
 
 ws.on('close', () => {

@@ -1,21 +1,32 @@
 const SHA256 = require('crypto-js/sha256');
 
-function block(data = {}) {
-  // let hash = data.hash || null;
-  // let previousHash = null;
-  // let height = null;
-  // let timestamp = null;
-  // let transactions = [];
-  // let nonce = 0;
-  // let difficulty = null;
+class block {
 
-  let {hash = null, previousHash = null,height = null,timestamp = null,transactions=[],nonce = 0,difficulty = null} = data;
+  constructor(data={}) {
+    // this.hash = null;
+    // this.previousHash = null;
+    // this.height = null;
+    // this.timestamp = null;
+    // this.transactions = [];
+    // this.nonce = 0;
+    // this.difficulty = null;
+    ({
+      hash: this.hash = null,
+      previousHash: this.previousHash = null,
+      height: this.height = null,
+      timestamp: this.timestamp = null,
+      transactions: this.transactions = '',
+      nonce: this.nonce = 0,
+      difficulty: this.difficulty = null
+    } = data);
+  }
+  //let {hash = null, previousHash = null,height = null,timestamp = null,transactions=[],nonce = 0,difficulty = null} = data;
 
-  function calculateHash() {
-    return SHA256(previousHash + height + timestamp + transactions + nonce).toString();
+  calculateHash() {
+    return SHA256(this.previousHash + this.height + this.timestamp + this.transactions + this.nonce).toString();
   }
 
-  function hexToBinary(s) {
+  hexToBinary(s) {
     let ret = '';
     const lookupTable = {
       '0': '0000',
@@ -46,57 +57,43 @@ function block(data = {}) {
   };
 
 
-  function mine() {
+  mine() {
+    var that = this;
+    this.nonce = 0;
+
     function recursiveMine(resolve) {
-      hash = calculateHash();
-      if (hexToBinary(hash).substr(0, difficulty) === '0'.repeat(difficulty)) {
+      that.hash = that.calculateHash();
+      if (that.hexToBinary(that.hash).substr(0, that.difficulty) === '0'.repeat(that.difficulty)) {
         resolve();
         return;
       }
-      nonce += 1;
+      that.nonce += 1;
       setImmediate(recursiveMine, resolve);
     }
     return new Promise(recursiveMine);
   }
 
-  async function create(data) {
-    previousHash = data.previousHash;
-    height = data.height;
-    difficulty = data.difficulty;
-    timestamp = parseInt(Date.now().toString().slice(0, -3), 10);
-    transactions = JSON.stringify(data.transactions.slice(0, data.length));
-    await mine();
+  async create(data) {
+    this.previousHash = data.previousHash;
+    this.height = data.height;
+    this.difficulty = data.difficulty;
+    this.timestamp = parseInt(Date.now().toString().slice(0, -3), 10);
+    this.transactions = JSON.stringify(data.transactions.slice(0, data.length));
+    await this.mine();
   }
 
-  async function createGenesis(data) {
-    previousHash = data.previousHash;
-    height = 1;
-    difficulty = data.difficulty;
-    timestamp = parseInt(Date.now().toString().slice(0, -3), 10);
-    transactions = JSON.stringify(data.transactions.slice(0, data.length));
-    await mine();
+  async createGenesis(data) {
+    this.previousHash = data.previousHash;
+    this.height = 1;
+    this.difficulty = data.difficulty;
+    this.timestamp = parseInt(Date.now().toString().slice(0, -3), 10);
+    this.transactions = [];
+    try {
+      await this.mine();
+    } catch (e) {
+      console.log(e);
+    }
   }
-
-  function view() {
-    return {
-      hash,
-      previousHash,
-      height,
-      timestamp,
-      transactions,
-      nonce,
-      difficulty,
-    };
-  }
-
-  
-  return Object.freeze({
-    create,
-    createGenesis,
-    view,
-    calculateHash,
-  });
 }
-
 
 module.exports = block;

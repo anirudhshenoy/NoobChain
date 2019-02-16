@@ -2,36 +2,39 @@ const SHA256 = require('crypto-js/sha256');
 const block = require('./block.js');
 
 
-function blockchain(data) {
-  let BLOCK_GENERATION_INTERVAL_SECS = 20;
-  let BLOCK_DIFFICULTY_ADJUSTMENT_INTERVAL = 10;
+class blockchain {
 
-  const chain= data || [];
-
-  function setChainParameters(generationTime, checkInterval) {
-    BLOCK_GENERATION_INTERVAL_SECS = generationTime || 60;
-    BLOCK_DIFFICULTY_ADJUSTMENT_INTERVAL = checkInterval || 5;
+  constructor(data = []) {
+    this.BLOCK_GENERATION_INTERVAL_SECS = 20;
+    this.BLOCK_DIFFICULTY_ADJUSTMENT_INTERVAL = 10;
+    this.chain = data;
   }
 
 
-  function isValidBlockStructure(newBlock) {
-    return (typeof (newBlock.view().hash) === 'string' &&
-      typeof (newBlock.view().previousHash) === 'string' &&
-      typeof (newBlock.view().height) === 'number' &&
-      typeof (newBlock.view().timestamp) === 'number' &&
-      typeof (newBlock.view().nonce) === 'number');
+  setChainParameters(generationTime, checkInterval) {
+    this.BLOCK_GENERATION_INTERVAL_SECS = generationTime || 60;
+    this.BLOCK_DIFFICULTY_ADJUSTMENT_INTERVAL = checkInterval || 5;
   }
 
-  function isValidNewBlock(newBlock, prevBlock) {
-    if (chain.length > 0 && (prevBlock.view().height + 1 !== newBlock.view().height)) {
-      console.log('Height Invalid');
+
+  isValidBlockStructure(newBlock) {
+    return (typeof (newBlock.hash) === 'string' &&
+      typeof (newBlock.previousHash) === 'string' &&
+      typeof (newBlock.height) === 'number' &&
+      typeof (newBlock.timestamp) === 'number' &&
+      typeof (newBlock.nonce) === 'number');
+  }
+
+  isValidNewBlock(newBlock, prevBlock) {               
+    if (this.chain.length > 0 && (prevBlock.height + 1 !== newBlock.height)) {
+      console.log('Height Invalid! Prev Block : ' + prevBlock.height + 'new Block ' + newBlock.height);
       return false;
     }
-    if (chain.length > 0 && (prevBlock.view().hash !== newBlock.view().previousHash)) {
+    if (this.chain.length > 0 && (prevBlock.hash !== newBlock.previousHash)) {
       console.log('Hash Invalid');
       return false;
     }
-    if (newBlock.calculateHash() !== newBlock.view().hash) {
+    if (newBlock.calculateHash() !== newBlock.hash) {
       console.log('Hash Invalid');
       return false;
     }
@@ -40,87 +43,82 @@ function blockchain(data) {
 
   // Ensure block is atmost 30 secs in the future than Date.now()
   // or atmost within 30 secs of prevBlock
-  function isValidTimestamp(newBlock, prevBlock) {
-    if (chain.length) {
-      return ((prevBlock.view().timestamp - 30) < newBlock.view().timestamp) &&
-        (newBlock.view().timestamp - 30) < Date.now().toString().slice(0, -3);
+  isValidTimestamp(newBlock, prevBlock) {
+    if (this.chain.length) {
+      return ((prevBlock.timestamp - 30) < newBlock.timestamp) &&
+        (newBlock.timestamp - 30) < Date.now().toString().slice(0, -3);
     }
     return true;
   }
 
 
-  function addBlock(newBlock) {
-    if (isValidBlockStructure(newBlock) && isValidNewBlock(newBlock, chain[chain.length - 1]) &&
-      isValidTimestamp(newBlock, chain[chain.length - 1])) {
-      chain.push(newBlock);
+  addBlock(newBlock) {
+    if (this.isValidBlockStructure(newBlock) && this.isValidNewBlock(newBlock, this.chain[this.chain.length - 1]) &&
+      this.isValidTimestamp(newBlock, this.chain[this.chain.length - 1])) {
+      this.chain.push(newBlock);
+      console.log(`Added Block ${this.chain[this.chain.length - 1].height} Hash: ${this.chain[this.chain.length - 1].hash}  to the chain`);
+
     } else {
       console.log('Invalid Block');
     }
+    
   }
 
-  function setDifficulty(bestBlock) {
-    const prevAdjustedBlock = chain[chain.length - BLOCK_DIFFICULTY_ADJUSTMENT_INTERVAL];
-    const timeTaken = bestBlock.view().timestamp - prevAdjustedBlock.view().timestamp;
-    const expectedTime = BLOCK_DIFFICULTY_ADJUSTMENT_INTERVAL * BLOCK_GENERATION_INTERVAL_SECS;
+  setDifficulty(bestBlock) {
+    const prevAdjustedBlock = this.chain[this.chain.length - this.BLOCK_DIFFICULTY_ADJUSTMENT_INTERVAL];
+    const timeTaken = bestBlock.timestamp - prevAdjustedBlock.timestamp;
+    const expectedTime = this.BLOCK_DIFFICULTY_ADJUSTMENT_INTERVAL * this.BLOCK_GENERATION_INTERVAL_SECS;
     // Blocks Generated too fast
     //console.log('Time Taken: ', timeTaken);
     //console.log('Expected Time: ', expectedTime);
     if ((timeTaken) < expectedTime) {
-      return prevAdjustedBlock.view().difficulty + 1;
+      return prevAdjustedBlock.difficulty + 1;
     }
     if ((timeTaken) > expectedTime) {
-      return (prevAdjustedBlock.view().difficulty > 0 ? prevAdjustedBlock.view().difficulty - 1 : 1);
+      return (prevAdjustedBlock.difficulty > 0 ? prevAdjustedBlock.difficulty - 1 : 1);
     }
-    return prevAdjustedBlock.view().difficulty;
+    return prevAdjustedBlock.difficulty;
   }
 
-  function getDifficulty() {
-    const bestBlock = chain[chain.length - 1];
-    if (bestBlock.view().height % BLOCK_DIFFICULTY_ADJUSTMENT_INTERVAL === 0) {
-      return setDifficulty(bestBlock);
+  getDifficulty() {
+    const bestBlock = this.chain[this.chain.length - 1];
+    if (bestBlock.height % this.BLOCK_DIFFICULTY_ADJUSTMENT_INTERVAL === 0) {
+      return this.setDifficulty(bestBlock);
     }
-    return bestBlock.view().difficulty;
+    return bestBlock.difficulty;
   }
 
-  async function generateNextBlock() {
-    const nb = block();
+  async generateNextBlock() {
+    const nb = new block();
     let pb;
-    if (chain.length === 0) {
+    if (this.chain.length === 0) {
+      console.log("creating Genesis");
       await nb.createGenesis({
-        previousHash: '1',
-        transactions: [],
-        difficulty: 10,
+        previousHash: '111',
+        difficulty: 17,
       });
     } else {
-      pb = chain[chain.length - 1];
+      pb = this.chain[this.chain.length - 1];
       await nb.create({
-        previousHash: pb.view().hash,
-        height: pb.view().height + 1,
-        difficulty: getDifficulty(),
+        previousHash: pb.hash,
+        height: pb.height + 1,
+        difficulty: this.getDifficulty(),
         transactions: Array(10).fill().map(() => SHA256(Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)).toString()),
       });
     }
-    addBlock(nb);
-    console.log(`Added Block ${chain[chain.length - 1].view().height} Difficulty: ${chain[chain.length - 1].view().difficulty}  to the chain`);
-  }
-
-  function view() {
-    return chain;
-  }
-
-  function viewBestBlock() {
-    return chain[chain.length - 1];
+    this.addBlock(nb);
   }
 
 
-  function getCummulativeDifficulty() {
-    return chain
-      .map((block) => block.view().difficulty)
+
+  getCummulativeDifficulty() {
+    return this.chain
+      .map((block) => block.difficulty)
       .map((difficulty) => Math.pow(2, difficulty))
       .reduce((a, b) => a + b);
   };
 
-  function isValidChain(validateChain) {
+  isValidChain(validateChain) {
     for (let i = 1; i < validateChain.length; i++) {
       if (!isValidNewBlock(validateChain[i], validateChain[i - 1])) {
         return false;
@@ -129,24 +127,14 @@ function blockchain(data) {
     return true;
   }
 
-  function replaceChain(newChain){
-    if(isValidChain(newChain) && (getCummulativeDifficulty(newChain) > getCummulativeDifficulty(chain))){
-      chain = newChain;
-    }
-    else
-    console.log('Invalid Chain received');
+  replaceChain(newChain) {
+    //console.log(newChain);
+    if (this.isValidChain(newChain) && (this.getCummulativeDifficulty(newChain) >= this.getCummulativeDifficulty(this.chain))) {
+      this.chain = newChain.chain;
+      console.log('replaced chain');
+    } else
+      console.log('Invalid Chain received');
   }
-
-
-  return Object.freeze({
-    view,
-    viewBestBlock,
-    generateNextBlock,
-    setChainParameters,
-    replaceChain,
-    isValidBlockStructure,
-    addBlock
-  });
 }
 
 

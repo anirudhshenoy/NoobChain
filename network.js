@@ -1,9 +1,9 @@
 const WebSocket = require('ws');
-const blockchain = require('./blockchain.js');
+const chain = require('./blockchain.js');
 const block = require('./block.js');
 
 
-function network() {
+function network(blockchain) {
 
  
   const MessageType = Object.freeze({
@@ -36,64 +36,63 @@ function network() {
   function queryBlock(ws) {
     const response = {
       type: MessageType.RESPONSE_CHAIN,
-      data: JSON.stringify(blockchain.viewBestBlock().view()),
+      data: JSON.stringify(blockchain.chain[blockchain.chain.length-1]),
     };
     write(ws,response);
   }
 
   function queryChain(ws) {
-    let chain = blockchain.view().map(value => value.view());
     const response = {
       type: MessageType.RESPONSE_CHAIN,
-      data: JSON.stringify(chain),
+      data: JSON.stringify(blockchain.chain),
     };
     write(ws,response);
   }
 
-  function sendQueryChain(ws) {
+  function sendQueryChain() {
     const response = {
       type: MessageType.QUERY_CHAIN,
       data: null,
     };
-    write(ws,response);
+    broadcast(response);
   }
 
   function broadcastBestBlock() {
     const response = {
       type: MessageType.RESPONSE_CHAIN,
-      data: JSON.stringify(blockchain.viewBestBlock().view()),
+      data: JSON.stringify([blockchain.chain[blockchain.chain.length-1]]), //[]
     };
     broadcast(response);
   }
 
   function recvdChain(recvdBlocks) {
-    console.log(recvdBlocks);
+    //console.log(recvdBlocks);
     if (recvdBlocks.length === 0) {
       console.log('received block chain size of 0');
       return;
     }
-    const recvdBestBlock = block(recvdBlocks[recvdBlocks.length - 1]);
+    const recvdBestBlock = new block(recvdBlocks[recvdBlocks.length - 1]);
+    //console.log(recvdBestBlock);
     if (!blockchain.isValidBlockStructure(recvdBestBlock)) {        
       console.log('Invalid Block Structure');
       return;
     }
-    const currentBestBlock = blockchain.viewBestBlock();
+    const currentBestBlock = blockchain.chain[blockchain.chain.length-1];
 
-    if (recvdBestBlock.view().height > currentBestBlock.view().height) {
-      console.log('Blockchain is possible behind. Recvd: ' + recvdBestBlock.view().height + 'Current: ' + currentBestBlock.view().height);
-      if (recvdBestBlock.view().previousHash === currentBestBlock.view().hash) {
+    if (recvdBestBlock.height > currentBestBlock.height) {
+      console.log('Blockchain is possibly behind. Recvd: ' + recvdBestBlock.height + 'Current: ' + currentBestBlock.height);
+      if (recvdBestBlock.previousHash === currentBestBlock.hash) {
         blockchain.addBlock(recvdBestBlock);
         console.log("addedblock");
         broadcastBestBlock();
-      } else if (recvdBestBlock.view().length === 1) {
+      } else if (recvdBlocks.length === 1) {
         console.log("sent query for chain");
         sendQueryChain();
       } else {
-        console.log(recvdBlocks);
-        blockchain.replaceChain(blockchain(recvdBlocks));
+        blockchain.replaceChain(new chain(recvdBlocks));
       }
     } else {
-      console.log('Received shorter block.');
+      //console.log('Received shorter block.');
     }
   }
 
@@ -128,7 +127,7 @@ function network() {
             console.log('Cannot parse blocks');
             break;
           }
-          recvdChain([recvdBlocks]);
+          recvdChain(recvdBlocks);
           break;
         default:
           console.log('Invalid Message Type');
@@ -168,4 +167,4 @@ function network() {
   });
 }
 
-module.exports = network();
+module.exports = network;
