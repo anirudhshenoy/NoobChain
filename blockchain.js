@@ -88,7 +88,7 @@ class blockchain {
     return bestBlock.difficulty;
   }
 
-  async generateNextBlock() {
+  async generateNextBlock(port) {
     const nb = new block();
     let pb;
     if (this.chain.length === 0) {
@@ -99,11 +99,13 @@ class blockchain {
       });
     } else {
       pb = this.chain[this.chain.length - 1];
+      let tx = ['192.168.31.122:' + port];
+      Array(4).fill().map(() => tx.push(SHA256(Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)).toString()));
       await nb.create({
         previousHash: pb.hash,
         height: pb.height + 1,
         difficulty: this.getDifficulty(),
-        transactions: Array(10).fill().map(() => SHA256(Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)).toString()),
+        transactions: tx,
       });
     }
     this.addBlock(nb);

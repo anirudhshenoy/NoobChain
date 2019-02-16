@@ -150,7 +150,7 @@ function network(blockchain) {
   }
 
   function connectToNode(serverIP) {
-    const ws = new WebSocket(serverIP);
+    const ws = new WebSocket('ws://'+serverIP);
     ws.on('open', () => {
       console.log('opened connection to ' + serverIP);
         initConnection(ws);
@@ -160,10 +160,15 @@ function network(blockchain) {
     });
 };
 
+function getSockets(){
+  return sockets;
+}
+
   return Object.freeze({
     initP2PServer,
     broadcastBestBlock,
     connectToNode,
+    getSockets,
   });
 }
 

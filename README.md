@@ -7,6 +7,7 @@ TODO:
     Add LevelDB for persistent storage
     Consenus Mechanism
     Web API for front-end
+    If no blocks exist chain crashes as its not able to compare to currentbestblock
 
 ## Block.js
 
